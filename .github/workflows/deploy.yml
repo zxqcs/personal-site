@@ -1,0 +1,77 @@
+name: Deploy Quartz site to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production and build dependencies
+        run: npm audit --audit-level=high
+
+      - name: Install locked Quartz plugins
+        run: npx quartz plugin install
+
+      - name: Validate release configuration
+        run: python3 scripts/validate_config.py
+
+      - name: Test publication safeguards
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Verify image processing pipeline
+        run: npm run test:image
+
+      - name: Scan public source
+        run: python3 scripts/security_scan.py content
+
+      - name: Check Quartz types and formatting
+        run: npm run check
+
+      - name: Build Quartz
+        run: npx quartz build
+
+      - name: Scan generated site
+        run: python3 scripts/security_scan.py public
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

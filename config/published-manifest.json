@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "tree_digest": "14e3dcef533c4b70e1334c2aa2f7a3574bb242d5a2e08d381df2bef56893c2e4",
+  "files": {
+    "about/index.md": "d307fb00e480606a73465dd091fb3a235ad5f5e436eb61d832075f76596d8664",
+    "essays/index.md": "a12815bd2c49726a61ece7eba8bfa3d5f20f5a218fed906152d1e0b73c61d125",
+    "fiction/index.md": "7e4e931761929295b76941695f8be434445d0be2530408a5adead659c78c7052",
+    "index.md": "7bd237f2a69e20d29103d3d1438690b6552711b66f5e0a076c916cf22fa28d45",
+    "projects/index.md": "20e7d793583a6e0df1b7e16c4acec6a6f71c217fb41ce57b8129b5e316b71062",
+    "thoughts/hello-public-world.md": "730925a1848dce344ed85fcfe320d4d9dcd47bfc0e3ca13509daa41bda300904"
+  }
+}
