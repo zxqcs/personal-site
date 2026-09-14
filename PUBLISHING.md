@@ -2,6 +2,8 @@
 
 ## One-time local setup
 
+Use Node.js 24 (see `.node-version`) with npm 10.9.2 or newer. Node.js 25 is intentionally rejected because it caused abnormal memory growth in the Quartz build tested for this project.
+
 The checked-in example is safe to share. The real file is ignored:
 
 ```text

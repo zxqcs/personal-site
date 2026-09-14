@@ -65,7 +65,18 @@ def require_safe_remote() -> str:
     return remote
 
 
+def require_node_24() -> None:
+    result = run(["node", "--version"], capture=True)
+    version = result.stdout.strip()
+    if not version.startswith("v24."):
+        raise ReleaseError(
+            f"本项目要求 Node.js 24，当前为 {version or '未知版本'}；"
+            "请按照 .node-version 切换后重试"
+        )
+
+
 def quality_gate() -> None:
+    require_node_24()
     findings = scan_tree(SITE_ROOT / "content")
     if findings:
         raise ReleaseError(format_findings(findings))
