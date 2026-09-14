@@ -53,7 +53,12 @@ def main() -> int:
             errors.append(f"本机路径配置被 Git 跟踪：{LOCAL_CONFIG}")
 
     workflow = (SITE_ROOT / ".github" / "workflows" / "deploy.yml").read_text(encoding="utf-8")
-    for expected in ("actions/checkout@v6", "actions/setup-node@v6", "actions/upload-pages-artifact@v3", "actions/deploy-pages@v4"):
+    for expected in (
+        "actions/checkout@v7",
+        "actions/setup-node@v7",
+        "actions/upload-pages-artifact@v5",
+        "actions/deploy-pages@v5",
+    ):
         if expected not in workflow:
             errors.append(f"Pages workflow 缺少预期官方 action：{expected}")
 
