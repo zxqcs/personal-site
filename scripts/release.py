@@ -85,7 +85,7 @@ def quality_gate() -> None:
     run([sys.executable, "scripts/audit_dependencies.py"])
     run(["npm", "run", "test:image"])
     run(["npm", "run", "check"])
-    run(["npx", "quartz", "build"])
+    run(["node", "quartz/bootstrap-cli.mjs", "build"])
     findings = scan_tree(SITE_ROOT / "public")
     if findings:
         raise ReleaseError(format_findings(findings))

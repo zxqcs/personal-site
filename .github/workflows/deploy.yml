@@ -52,7 +52,7 @@ jobs:
         run: npm run check
 
       - name: Build Quartz
-        run: npx quartz build
+        run: node quartz/bootstrap-cli.mjs build
 
       - name: Scan generated site
         run: python3 scripts/security_scan.py public
