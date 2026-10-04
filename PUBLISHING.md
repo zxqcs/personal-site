@@ -12,6 +12,14 @@ Private Vault 不属于这条路径，也不能填入发布配置。发布前仍
 
 本项目使用 Node.js 24 和 npm 10.9.2 或更新版本。运行 `node --version`，应显示 `v24.x`。如果不是，请先用你安装的 Node 版本管理器切换到 24；发布脚本会阻止其他主版本。
 
+如果当前终端只有 Node 25，也可以为单次命令临时使用 Node 24，无需改动系统默认版本。例如：
+
+```bash
+npm_config_cache=/tmp/personal-site-npm-cache npm exec --yes --package=node@24.21.0 -- sh -c 'python3 scripts/release.py --dry-run'
+```
+
+正式发布时，把末尾的 `--dry-run` 改为 `--release --push`。首次运行需要从 npm 下载 Node 24；之后会复用缓存。
+
 从网站工程目录操作：
 
 ```bash
