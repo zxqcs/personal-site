@@ -1,70 +1,75 @@
-# Publishing and operations
+# 发布指南
 
-## One-time local setup
+## 写作与发布的关系
 
-Use Node.js 24 (see `.node-version`) with npm 10.9.2 or newer. Node.js 25 is intentionally rejected because it caused abnormal memory growth in the Quartz build tested for this project.
+在 Obsidian 中打开 `~/Documents/PublicVault`，所有公开文章都在这里编辑。它是文章的唯一原稿。网站工程位于本仓库；其中的 `content/` 是发布时生成的副本，不要直接编辑。
 
-The checked-in example is safe to share. The real file is ignored:
+发布路径为：PublicVault → 安全检查与单向复制 → `content/` → GitHub 仓库 → GitHub Actions 运行 Quartz → GitHub Pages。
 
-```text
-config/publish.example.toml
-config/publish.local.toml
-```
+Private Vault 不属于这条路径，也不能填入发布配置。发布前仍需亲自检查文章是否适合公开；自动扫描只能拦截部分常见敏感内容。
 
-The local file already points to the sibling PublicVault in this workspace. On another computer, copy the example and set an absolute PublicVault path. Never configure a Private Vault path.
+## 首次准备
 
-## Publish content locally
+本项目使用 Node.js 24 和 npm 10.9.2 或更新版本。运行 `node --version`，应显示 `v24.x`。如果不是，请先用你安装的 Node 版本管理器切换到 24；发布脚本会阻止其他主版本。
 
-From `personal-site/`:
+从网站工程目录操作：
 
 ```bash
-python3 scripts/publish.py --dry-run
-python3 scripts/publish.py --publish
-python3 scripts/release.py --dry-run
+cd /path/to/personal-site
+npm ci
 ```
 
-The first command is non-mutating. The second asks before replacing `content/` and never commits or pushes. The third runs all local gates without committing or pushing.
+将 `/path/to/personal-site` 换成网站工程在本机的实际路径。本机的 `config/publish.local.toml` 已指向 `~/Documents/PublicVault` 对应的绝对路径。这个文件被 Git 忽略，不会上传。换电脑时，复制 `config/publish.example.toml` 为 `config/publish.local.toml`，再填入新电脑上 PublicVault 的绝对路径。不要填 Private Vault。
 
-## Connect GitHub and Pages
+GitHub 仓库、Pages 发布源和站点地址已经配置完成；日常发文无需重复设置。
 
-1. Create an empty public GitHub repository, normally `personal-site`; do not initialize it with files.
-2. Configure the canonical Pages URL:
+## 每次发布
 
-   ```bash
-   python3 scripts/configure_site.py --github-user YOUR_NAME --repository personal-site
-   ```
-
-3. Commit that setup change, then set your own remote:
+1. 在 PublicVault 中写好文章，检查标题、链接、图片和任何可能涉及隐私的内容。当前发布白名单包括根目录 `index.md`，以及 `about/`、`thoughts/`、`essays/`、`projects/`、`fiction/`、`assets/` 中允许类型的文件。
+2. 在网站工程目录预览将新增、修改和删除的文件。这一步不改动文件或远端：
 
    ```bash
-   git remote add origin git@github.com:YOUR_NAME/personal-site.git
-   git push -u origin main
+   python3 scripts/publish.py --dry-run
    ```
 
-4. In GitHub repository Settings → Pages, set Source to **GitHub Actions**.
-5. For normal content releases, use:
+3. 核对预览后，复制到网站工程。脚本会再次询问；只有输入 `y` 才会更新 `content/` 和发布清单。此时还没有提交或上传：
+
+   ```bash
+   python3 scripts/publish.py --publish
+   ```
+
+4. 先运行完整发布检查，包括配置、安全扫描、自动化测试、依赖审计和 Quartz 构建。这一步不会提交或上传：
+
+   ```bash
+   python3 scripts/release.py --dry-run
+   ```
+
+5. 检查通过后发布。脚本先询问是否创建本地提交，再询问是否推送到公开仓库；推送后 GitHub Actions 自动部署网站：
 
    ```bash
    python3 scripts/release.py --release --push
    ```
 
-The tool shows managed changes, tests and builds locally, then asks once before commit and again before push.
+如果预览显示没有变化，就不需要继续发布。如果在第二次确认时选择不推送，本地提交会保留；确认提交内容后，可用 `git push origin main` 完成推送。
 
-## Acceptance
+## 上线验收
 
-- Actions build and deploy jobs are green.
-- Home, About and the Chinese test article open from the Pages URL.
-- Search, WikiLink navigation, RSS (`index.xml`), sitemap (`sitemap.xml`) and 404 work.
-- `git ls-files` contains no `publish.local.toml`, `.obsidian`, Private Vault path or credential.
-- A Private Vault sentinel, symlink, parent reference and synthetic token are all blocked by tests.
+在 [GitHub Actions](https://github.com/zxqcs/personal-site/actions) 确认最新的构建和部署都成功，再打开 [网站首页](https://zxqcs.github.io/personal-site/)与新文章检查。必要时再核对搜索、WikiLink、RSS（`index.xml`）、站点地图（`sitemap.xml`）和不存在页面的 404 响应。GitHub Pages 更新可能有短暂缓存延迟。
 
-## Rollback
+若检查失败或部署失败，先看命令输出或对应的 Actions 日志。`config/publish.local.toml`、`.obsidian/`、Private Vault 文件和凭据都不应进入公开 Git 历史。
 
-Choose a known-good commit from the repository history, preview it, then create a new rollback commit:
+## 回滚已发布内容
+
+先从 `git log --oneline` 找到确认正常的旧提交。回滚要求网站工程的 Git 工作区完全干净；先预览目标与当前发布副本的差异：
 
 ```bash
-python3 scripts/rollback.py --to GOOD_COMMIT
-python3 scripts/rollback.py --to GOOD_COMMIT --apply --push
+python3 scripts/rollback.py --to 旧提交ID
 ```
 
-This restores only the deployed content snapshot and manifest. It does not modify PublicVault, force-push, or rewrite history. The next ordinary publication from PublicVault restores the latest source.
+确认后执行：
+
+```bash
+python3 scripts/rollback.py --to 旧提交ID --apply --push
+```
+
+脚本会分别询问是否创建回滚提交、是否推送。它只恢复网站的 `content/` 和发布清单，随后由 GitHub Actions 重新部署；PublicVault 原稿不会改变，Git 历史也不会被改写。以后再次从 PublicVault 正常发布，会重新带入原稿中的最新内容。
