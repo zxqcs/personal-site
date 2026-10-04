@@ -10,24 +10,23 @@ Private Vault 不属于这条路径，也不能填入发布配置。发布前仍
 
 ## 首次准备
 
-本项目使用 Node.js 24 和 npm 10.9.2 或更新版本。运行 `node --version`，应显示 `v24.x`。如果不是，请先用你安装的 Node 版本管理器切换到 24；发布脚本会阻止其他主版本。
-
-如果当前终端只有 Node 25，也可以为单次命令临时使用 Node 24，无需改动系统默认版本。例如：
-
-```bash
-npm_config_cache=/tmp/personal-site-npm-cache npm exec --yes --package=node@24.21.0 -- sh -c 'python3 scripts/release.py --dry-run'
-```
-
-正式发布时，把末尾的 `--dry-run` 改为 `--release --push`。首次运行需要从 npm 下载 Node 24；之后会复用缓存。
-
-从网站工程目录操作：
+先进入网站工程目录；以下命令都在此目录运行：
 
 ```bash
 cd /path/to/personal-site
-npm ci
 ```
 
-将 `/path/to/personal-site` 换成网站工程在本机的实际路径。本机的 `config/publish.local.toml` 已指向 `~/Documents/PublicVault` 对应的绝对路径。这个文件被 Git 忽略，不会上传。换电脑时，复制 `config/publish.example.toml` 为 `config/publish.local.toml`，再填入新电脑上 PublicVault 的绝对路径。不要填 Private Vault。
+将 `/path/to/personal-site` 换成网站工程在本机的实际路径。本项目使用 Node.js 24 和 npm 10.9.2 或更新版本。运行 `node --version`，应显示 `v24.x`。如果已用版本管理器切换到 Node 24，安装依赖用 `npm ci`。
+
+当前电脑的默认版本是 Node 25；可用下面的方式仅为一条命令临时使用 Node 24，无需改动系统默认版本。首次运行会下载 Node 24，以后复用缓存。首次安装依赖时运行：
+
+```bash
+npm_config_cache=/tmp/personal-site-npm-cache npm exec --yes --package=node@24.21.0 -- sh -c 'npm ci'
+```
+
+`npm ci` 目前可能提示 4 项高危告警，来源是同一条尚无修复版本的 Quartz 构建依赖链；具体风险与限定范围见 [SECURITY.md](SECURITY.md)。正式发布仍会运行仓库的依赖审计，其他高危告警会阻断发布。
+
+本机的 `config/publish.local.toml` 已指向 `~/Documents/PublicVault` 对应的绝对路径。这个文件被 Git 忽略，不会上传。换电脑时，复制 `config/publish.example.toml` 为 `config/publish.local.toml`，再填入新电脑上 PublicVault 的绝对路径。不要填 Private Vault。
 
 GitHub 仓库、Pages 发布源和站点地址已经配置完成；日常发文无需重复设置。
 
@@ -46,19 +45,33 @@ GitHub 仓库、Pages 发布源和站点地址已经配置完成；日常发文�
    python3 scripts/publish.py --publish
    ```
 
-4. 先运行完整发布检查，包括配置、安全扫描、自动化测试、依赖审计和 Quartz 构建。这一步不会提交或上传：
+4. 先运行完整发布检查，包括配置、安全扫描、自动化测试、依赖审计和 Quartz 构建。这一步不会提交或上传。若终端已切换到 Node 24，直接运行：
 
    ```bash
    python3 scripts/release.py --dry-run
    ```
 
-5. 检查通过后发布。脚本先询问是否创建本地提交，再询问是否推送到公开仓库；推送后 GitHub Actions 自动部署网站：
+   若终端仍是 Node 25，运行已在本机验证通过的临时 Node 24 命令：
+
+   ```bash
+   npm_config_cache=/tmp/personal-site-npm-cache npm exec --yes --package=node@24.21.0 -- sh -c 'python3 scripts/release.py --dry-run'
+   ```
+
+5. 检查通过后发布。脚本先询问是否创建本地提交，再询问是否推送到公开仓库；推送后 GitHub Actions 自动部署网站。终端已是 Node 24 时运行：
 
    ```bash
    python3 scripts/release.py --release --push
    ```
 
-如果预览显示没有变化，就不需要继续发布。如果在第二次确认时选择不推送，本地提交会保留；确认提交内容后，可用 `git push origin main` 完成推送。
+   终端仍是 Node 25 时运行：
+
+   ```bash
+   npm_config_cache=/tmp/personal-site-npm-cache npm exec --yes --package=node@24.21.0 -- sh -c 'python3 scripts/release.py --release --push'
+   ```
+
+如果预览显示没有变化，就不需要继续发布。`release.py --dry-run` 在没有待发布变更时会直接结束，不会重复执行全部检查。如果在第二次确认时选择不推送，本地提交会保留；确认提交内容后，可用 `git push origin main` 完成推送。
+
+网站工程的格式检查不要求改写 Obsidian 原稿；`content/` 不参加 Prettier 检查，但仍会接受发布安全扫描。Quartz 构建由脚本直接调用仓库内的入口，无需手动运行 `npx quartz build`。
 
 ## 上线验收
 
