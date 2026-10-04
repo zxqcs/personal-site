@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Audit production and build dependencies
-        run: npm audit --audit-level=high
+        run: python3 scripts/audit_dependencies.py
 
       - name: Install locked Quartz plugins
         run: npx quartz plugin install

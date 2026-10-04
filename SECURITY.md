@@ -16,6 +16,12 @@ Private Vault is out of scope and inaccessible by design: no path is configured,
 - Separate confirmations for local copy, Git commit and public push.
 - CI scans both source content and final generated output before deployment.
 
+## Reviewed dependency advisory
+
+The Quartz build uses `globby → fast-glob → micromatch → braces`. The high-severity [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) currently has no patched `braces` release. In this project, glob patterns are fixed by repository code and configuration; the generated GitHub Pages site is static and does not run this dependency for visitors.
+
+`scripts/audit_dependencies.py` permits only this exact advisory, dependency chain and locked versions. Every other high or critical advisory, a changed chain, or a changed version fails the local release and CI. Remove the exception when an upstream patched version is available. A patched moderate-severity `brace-expansion` version is already locked.
+
 These controls reduce accidental disclosure; they cannot recognize every private fact, sensitive text inside images/PDFs, or a malicious process that already has local write access. Human review remains mandatory.
 
 ## If a secret is published

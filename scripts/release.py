@@ -82,7 +82,7 @@ def quality_gate() -> None:
         raise ReleaseError(format_findings(findings))
     run([sys.executable, "scripts/validate_config.py"])
     run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"])
-    run(["npm", "audit", "--audit-level=high"])
+    run([sys.executable, "scripts/audit_dependencies.py"])
     run(["npm", "run", "test:image"])
     run(["npm", "run", "check"])
     run(["npx", "quartz", "build"])
